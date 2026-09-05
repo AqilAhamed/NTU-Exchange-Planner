@@ -8,6 +8,7 @@ backend/.env
 *.db
 *.db-wal
 *.db-shm
+!coursefinder.db
 
 # --- Python --------------------------------------------------------------
 __pycache__/
