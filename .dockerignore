@@ -1,0 +1,42 @@
+# The build context includes a 179 MB database and a 88 MB model, so anything
+# that does not belong in the image has to be excluded explicitly or every
+# build ships it to the daemon.
+
+.git/
+.gitignore
+
+# Node / Next
+frontend/node_modules/
+frontend/.next/
+frontend/.next-dev/
+frontend/out/
+
+# Python
+backend/.venv/
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Local state and secrets. app_state.db is replaced by DynamoDB in the image;
+# .env must never be baked in - the Lambda role supplies credentials.
+backend/.env
+data/app_state.db
+data/app_state.db-wal
+data/app_state.db-shm
+
+# Rollback snapshot from before universities.city_state was added. The image
+# copies coursefinder.db by name, not by glob, so this never reached a layer -
+# but without this line it is still 179 MB shipped to the Docker daemon as
+# build context on every single build.
+coursefinder.db.pre-location.bak
+data/test-wise-cache.db
+
+# The search sidecar is a Windows binary and is not deployed; the research
+# lane runs with SEARCH_PROVIDER=null in the cloud.
+tools/openserp/
+
+# Docs and planning material
+docs/
+plan/
+*.md

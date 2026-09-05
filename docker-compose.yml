@@ -1,0 +1,27 @@
+# The demo's one external dependency, so it starts with one command.
+#
+#   docker compose up -d openserp
+#
+# openserp is the search backend for the research lane. It is bound to
+# 127.0.0.1 deliberately: nothing outside this machine should be able to drive
+# searches through it.
+#
+# The app is fully usable with this stopped — the research lane reports
+# research_unavailable and every other lane is unaffected. That is worth
+# demonstrating rather than hiding.
+services:
+  openserp:
+    image: karust/openserp:latest
+    container_name: ntu-exchange-openserp
+    command: serve -a 0.0.0.0 -p 7000
+    ports:
+      - "127.0.0.1:7000:7000"
+    restart: unless-stopped
+    healthcheck:
+      # DuckDuckGo rather than Google: a scraped-Google captcha mid-demo is the
+      # one failure you cannot recover from on stage.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:7000/duckduckgo/search?text=ping&limit=1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s

@@ -1,0 +1,304 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+:root,
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0a0c;
+  --ink: #ececef;
+  --muted: #9a9aa3;
+  --faint: #7a7a84;
+  --link: #60a5fa;
+  --link-hover: #93c5fd;
+  --accent: #60a5fa;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --nav: rgba(8, 8, 10, 0.92);
+  --line: rgba(255, 255, 255, 0.1);
+  --hover: rgba(255, 255, 255, 0.08);
+  --active: rgba(255, 255, 255, 0.14);
+  --cta-bg: #ffffff;
+  --cta-ink: #111111;
+  --user-bg: #ffffff;
+  --user-ink: #111111;
+  --send-glow: rgba(255, 255, 255, 0.16);
+  --overlay: rgba(0, 0, 0, 0.5);
+  --orb-1: #1c1c1e;
+  --orb-2: #222226;
+  --orb-3: #121214;
+  --danger: #f0b4b4;
+  --thumb: rgba(255, 255, 255, 0.14);
+  --row: transparent;
+  --row-alt: rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e6eaef;
+  --ink: #141418;
+  --muted: #5c5c68;
+  --faint: #6e6e78;
+  --link: #2563eb;
+  --link-hover: #1d4ed8;
+  --accent: #2563eb;
+  --glass: rgba(255, 255, 255, 0.52);
+  --glass-border: rgba(255, 255, 255, 0.78);
+  --nav: rgba(255, 255, 255, 0.78);
+  --line: rgba(20, 20, 24, 0.1);
+  --hover: rgba(20, 20, 24, 0.06);
+  --active: rgba(20, 20, 24, 0.1);
+  --cta-bg: #141418;
+  --cta-ink: #ffffff;
+  --user-bg: #141418;
+  --user-ink: #ffffff;
+  --send-glow: rgba(20, 20, 24, 0.18);
+  --overlay: rgba(20, 20, 24, 0.35);
+  --orb-1: #c5d0dc;
+  --orb-2: #c5d0e8;
+  --orb-3: #d5d8e0;
+  --danger: #b42318;
+  --thumb: rgba(20, 20, 24, 0.18);
+  --row: #ffffff;
+  --row-alt: #f6f6f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
+}
+
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-nav {
+  background: var(--nav);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border-right: 1px solid var(--line);
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.app-link {
+  color: var(--link);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.app-link:hover {
+  color: var(--link-hover);
+}
+
+.app-link.citation-link,
+.app-link.citation-link:hover {
+  text-decoration: none;
+}
+
+.app-link {
+  overflow-wrap: anywhere;
+}
+
+.mapping-detail-row dd,
+.mapping-group-row dd {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.mapping-table-container {
+  container-type: inline-size;
+}
+
+.mapping-mobile-filters {
+  display: none;
+}
+
+.mapping-au-label,
+.mapping-alternative-au-label {
+  display: none;
+}
+
+.mapping-compact-label {
+  display: none;
+}
+
+.mapping-au-content {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.mapping-details-heading,
+.mapping-actions-cell {
+  width: 76px;
+}
+
+.mapping-actions-cell {
+  white-space: nowrap;
+}
+
+/* Mapping tables reflow into stacked, readable rows when the university
+   drawer is narrow. This is based on the drawer's actual width rather than
+   the browser viewport, so dragging the divider updates the layout naturally. */
+@container (max-width: 620px) {
+  .mapping-mobile-filters {
+    display: grid;
+  }
+
+  .mapping-table {
+    display: block;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  .mapping-table thead {
+    display: none;
+  }
+
+  .mapping-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .mapping-table .mapping-primary-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    width: 100%;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--row-alt);
+    box-sizing: border-box;
+  }
+
+  .mapping-table .mapping-primary-row > td {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 0;
+    background: transparent !important;
+  }
+
+  .mapping-table .mapping-ntu-cell,
+  .mapping-table .mapping-host-cell {
+    grid-column: 1 / -1;
+  }
+
+  .mapping-table .mapping-ntu-cell {
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+
+  .mapping-table .mapping-host-cell {
+    border-radius: 0;
+  }
+
+  .mapping-table .mapping-compact-label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--muted);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .mapping-table .mapping-au-cell {
+    grid-column: 1;
+    border-radius: 0 0 0 0.75rem;
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .mapping-table .mapping-au-label,
+  .mapping-table .mapping-alternative-au-label {
+    display: inline;
+    color: var(--muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .mapping-table .mapping-au-content {
+    gap: 0.45rem;
+  }
+
+  .mapping-table .mapping-au-value {
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+
+  .mapping-table .mapping-actions-cell {
+    grid-column: 2;
+    width: auto;
+    justify-self: end;
+    border-radius: 0 0 0.75rem 0;
+    padding-left: 0.5rem;
+    text-align: right;
+  }
+
+  .mapping-table .mapping-actions-cell button {
+    width: max-content;
+  }
+
+  .mapping-table .mapping-alternative-row {
+    grid-template-columns: minmax(0, 1fr) auto max-content;
+  }
+
+  .mapping-table .mapping-group-row,
+  .mapping-table .mapping-detail-row {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+
+  .mapping-table .mapping-group-row > td,
+  .mapping-table .mapping-detail-row > td {
+    display: block;
+    width: 100%;
+    padding: 0.25rem 0 0.5rem;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--thumb);
+  border-radius: 99px;
+}
