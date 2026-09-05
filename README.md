@@ -115,6 +115,88 @@ it does not survive.
 
 ---
 
+## How the data was built
+
+Two of the three grounded sources are datasets we assembled ourselves. Neither
+is a public API, so both were built offline, once, and now travel with the
+project as artifacts.
+
+### `coursefinder.db` — the approved-mapping record
+
+NTU's official Coursefinder site publishes, for every partner university, the
+modules that seniors have previously mapped and had **approved** for each NTU
+course. That history is the single authoritative answer to "will this module
+actually count", and it is only available through the site.
+
+We wrote a Python scraper that walks Coursefinder for NTU students and collects
+every previously-mapped module across all NTU courses and host universities. It
+writes to an intermediate `coursefinder.json`, which is then converted into the
+read-only SQLite database the application queries:
+
+```
+NTU Coursefinder site  ──scraper──▶  coursefinder.json  ──convert──▶  coursefinder.db
+```
+
+The result is **557 universities, 43,962 approved mappings and 73,752 student
+submissions**. The application opens this database `mode=ro` and never writes to
+it, so the record cannot drift at runtime.
+
+> The scraper and the intermediate JSON are build-time tooling and are not part
+> of this repository — `coursefinder.db` is the artifact they produce.
+
+### Adding `city_state`, so cost-of-living can be looked up
+
+Coursefinder names the university and its country, but not the city — and a
+cost-of-living figure is a *city* fact. "Technical University of Munich" tells
+you nothing about Munich unless something makes that link.
+
+[`tools/enrich_university_locations.py`](tools/enrich_university_locations.py)
+queries the internet for the city or state of every university in the
+`universities` table and writes it back as an additional **`city_state`**
+column, with the evidence and method recorded and a country-level fallback when
+no city can be established. It also guards against the obvious failure mode:
+an institution's *name* containing a place word does not make that place its
+city.
+
+All **557 of 557** rows are populated. The finance lane reads `city_state`
+first, then asks Wise for that city's cost of living — which is what turns a
+university row into a monthly figure in SGD.
+
+### The general-questions RAG corpus
+
+The other lane students need is procedural: how nomination works, what the
+eligibility bar is, how credit transfer or withdrawal is handled. None of that
+is on the open web — it lives on the **NTU Intranet**, behind a student login.
+
+We downloaded the official GEM Explorer and SUSEP documentation from the NTU
+Intranet as PDFs, then built a retrieval corpus from them with
+[`tools/ingest_general_questions.py`](tools/ingest_general_questions.py):
+
+```
+NTU Intranet PDFs  ──▶  layout-aware, section-preserving chunks
+                   ──▶  local ONNX MiniLM embeddings
+                   ──▶  ChromaDB collection  (ntu_exchange_general_questions)
+```
+
+Ingestion reconstructs genuine multi-column PDF tables from visual x/y
+alignment, keeps wrapped column headings, normalises malformed currency glyphs,
+and rejects ordinary prose that merely *looks* tabular. The current corpus is
+**10 source PDFs → 46 indexed chunks**, ingestion version `section-aware-v7`.
+
+Rebuild it with:
+
+```bash
+backend\.venv\Scripts\python.exe tools\ingest_general_questions.py --reset
+```
+
+At query time the agent reads only the persisted collection — **the PDFs are
+never opened at runtime**, and every answer cites the indexed passage it came
+from, which the UI can display. This is what lets a student ask a general
+question about NTU's exchange procedure and get an answer grounded in NTU's own
+documentation rather than a web search.
+
+---
+
 ## Deployed architecture
 
 ```
@@ -161,6 +243,13 @@ specific to one machine. The steps below recreate them.
 Nothing else is missing. `coursefinder.db`, the Chroma collection and the ONNX
 embedding model are all included, so there is no dataset to download and the
 source PDFs are not needed.
+
+> **If you cloned this from GitHub, `coursefinder.db` is not included.**
+> It is 178 MB, over GitHub's 100 MB per-file limit, so `.gitignore` excludes
+> it. Without it the health endpoint reports `degraded` and the shortlist lane
+> declines rather than guessing — working as designed, but not useful. The file
+> ships with the submitted project folder; place it in the repository root
+> before starting. Everything else needed at runtime **is** in the repository.
 
 **Requirements:** Python 3.12 or newer, Node 20 or newer with npm. Windows is
 the tested path; on macOS and Linux the same commands work with
@@ -363,7 +452,7 @@ printing a database chunk. **The original PDFs are never read at query time.**
 | `backend/requirements.txt` | Runtime Python dependencies |
 | `backend/requirements-dev.txt` | Adds pytest, ruff and moto on top of the above |
 | `backend/.env.example` | Template for secrets and configuration; copy to `backend/.env` |
-| `coursefinder.db` | Read-only SQLite, 179 MB: 557 universities, 43,962 approved mappings, 73,752 submissions |
+| `coursefinder.db` | Read-only SQLite, 178 MB: 557 universities, 43,962 approved mappings, 73,752 submissions. **Excluded from git** — see the note above |
 | `data/general_questions_chroma/` | Persisted ChromaDB collection, 46 indexed chunks |
 | `data/general_questions_embedding/` | Project-local ONNX MiniLM embedding model |
 | `frontend/` | Next.js 15 UI. `lib/api.ts` is the schema of record |
